@@ -80,6 +80,10 @@ export default function Step1() {
               <div className="w-2 h-2 rounded-full bg-muted" />
               <span className="text-sm text-muted-foreground">Step 2</span>
             </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-muted" />
+              <span className="text-sm text-muted-foreground">Step 3</span>
+            </div>
           </div>
         </div>
       </div>

@@ -7,6 +7,7 @@ import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { ArrowLeft, Plus, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { authService } from "@/services/auth";
 
 export default function Step2() {
   const navigate = useNavigate();
@@ -15,9 +16,56 @@ export default function Step2() {
   const [customInterest, setCustomInterest] = useState("");
   const [destination, setDestination] = useState("");
 
-  // Interest categories that change based on destination
   const getInterestsForDestination = (dest: string) => {
-    const baseInterests = [
+    const destLower = dest.toLowerCase();
+
+    if (destLower.includes("andaman")) {
+      return [
+        "Beaches 🏖️",
+        "Islands 🏝️",
+        "Adventure Sports 🤿",
+        "Historical 🏰",
+        "Temples 🛕",
+        "Nightlife 🌃",
+        "Nature & Wildlife 🌿"
+      ];
+    }
+
+    if (destLower.includes("manali")) {
+      return [
+        "Mountains & Valleys 🏔️",
+        "Adventure Sports 🧗‍♂️",
+        "Historical & Cultural 🏰",
+        "Nature & Waterfalls 🌿",
+        "Cafes & Nightlife ☕",
+        "Hotels & Stay 🛏️",
+        "Local Markets & Shopping 🛍️"
+      ];
+    }
+
+    if (destLower.includes("chikmagalur")) {
+      return [
+        "Lakes & Water Bodies 🏞️",
+        "Mountains & Hills ⛰️",
+        "Adventure & Trekking 🥾",
+        "Historical & Heritage 🏰",
+        "Temples & Spiritual Sites 🛕",
+        "Coffee Culture & Plantations ☕",
+        "Nature & Wildlife 🌿"
+      ];
+    }
+
+    if (destLower.includes("bihar")) {
+      return [
+        "Heritage & Historical 🏯",
+        "Spiritual & Religious 🛕",
+        "Nature & Wildlife 🌿",
+        "Urban & Museums 🏙️",
+        "Food & Culture 🍲"
+      ];
+    }
+
+    return [
       "Must-see Attractions",
       "Museums & Art",
       "Great Food",
@@ -25,33 +73,38 @@ export default function Step2() {
       "Adventure Sports",
       "Nature & Wildlife",
       "Shopping",
-      "Nightlife",
-      "Photography Spots",
-      "Local Markets",
+      "Nightlife"
     ];
-    return baseInterests;
   };
 
   const [interests, setInterests] = useState<string[]>([]);
 
   useEffect(() => {
-    const isAuth = localStorage.getItem("isAuthenticated");
-    if (!isAuth) {
-      toast.error("Please login to continue");
-      navigate("/auth?mode=login");
-      return;
-    }
+    const checkAuthAndData = async () => {
+      try {
+        const user = await authService.getCurrentUser();
+        if (!user) {
+          toast.error("Please login to continue");
+          navigate("/auth?mode=login", { replace: true });
+          return;
+        }
 
-    const step1Data = localStorage.getItem("step1Data");
-    if (!step1Data) {
-      toast.error("Please complete Step 1 first");
-      navigate("/step1");
-      return;
-    }
+        const step1Data = localStorage.getItem("step1Data");
+        if (!step1Data) {
+          toast.error("Please complete Step 1 first");
+          navigate("/step1", { replace: true });
+          return;
+        }
 
-    const data = JSON.parse(step1Data);
-    setDestination(data.destination);
-    setInterests(getInterestsForDestination(data.destination));
+        const data = JSON.parse(step1Data);
+        setDestination(data.destination);
+        setInterests(getInterestsForDestination(data.destination));
+      } catch (e) {
+        toast.error("Authentication check failed. Please log in.");
+        navigate("/auth?mode=login", { replace: true });
+      }
+    };
+    checkAuthAndData();
   }, [navigate]);
 
   const toggleInterest = (interest: string) => {
@@ -79,16 +132,14 @@ export default function Step2() {
     }
 
     localStorage.setItem("step2Data", JSON.stringify({ interests: selectedInterests }));
-    toast.success("Great choices! Your personalized itinerary is ready.");
-    // For now, navigate back to home. In production, this would go to Step 3
-    navigate("/");
+    toast.success("Great choices! Let's pick your places.");
+    navigate("/step3");
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-8 relative overflow-hidden">
       <AnimatedBackground />
 
-      {/* Header */}
       <div className="fixed top-0 left-0 right-0 z-40 glass-strong">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
           <Button
@@ -111,6 +162,10 @@ export default function Step2() {
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
               <span className="text-sm text-muted-foreground">Step 2</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-muted" />
+              <span className="text-sm text-muted-foreground">Step 3</span>
             </div>
           </div>
         </div>
@@ -138,7 +193,6 @@ export default function Step2() {
             </p>
           </motion.div>
 
-          {/* Interest Grid */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-3 mb-4">
             {interests.map((interest, index) => (
               <motion.button
@@ -167,7 +221,6 @@ export default function Step2() {
               </motion.button>
             ))}
 
-            {/* Add Custom Interest Button */}
             <motion.button
               type="button"
               initial={{ opacity: 0, scale: 0.8 }}
@@ -183,7 +236,6 @@ export default function Step2() {
             </motion.button>
           </div>
 
-          {/* Custom Interest Input */}
           {showCustomInput && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
@@ -213,7 +265,6 @@ export default function Step2() {
             </motion.div>
           )}
 
-          {/* Selected Count */}
           {selectedInterests.length > 0 && (
             <motion.div
               initial={{ opacity: 0 }}
@@ -227,7 +278,6 @@ export default function Step2() {
             </motion.div>
           )}
 
-          {/* Continue Button */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
